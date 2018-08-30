@@ -11,7 +11,7 @@ var apiTypes = new Array();
 
 function reload() {
 	console.log("Starting reload of API.");
-	var r = request.defaults();
+	var r = process.env.HTTP_PROXY === empty ? request.defaults() : request.defaults({ proxy: process.env.HTTP_PROXY });
 	r({
 		method: 'POST',
 		url: 'https://anypoint.mulesoft.com/accounts/login',
@@ -29,8 +29,6 @@ function reload() {
 		}
 	});
 }
-
-//reload();
 
 app.use(bodyParser.json({type: 'application/json'}));
 app.use(bodyParser.text({type: 'text/plain'}));
@@ -50,7 +48,7 @@ app.post('/v', function(req, res) {
 			response += '/' + sts.getValidationPathAsString() + ': ' + sts.getMessage() + '\n';
 		}
 	);	
-	res.send(response == '' ? 'Request is valid' : 'REQUEST contains errors:\n' + response);
+	res.send(response == '' ? 'Request is valid' : 'Request contains errors:\n' + response);
 });
 
 app.get('/reload', function(req, res) {
@@ -58,11 +56,13 @@ app.get('/reload', function(req, res) {
 	res.send('Reload requested');
 });
 
-var server_port = 8081; //process.env.OPENSHIFT_NODEJS_PORT || 80
-var server_ip_address = '127.0.0.1'; //process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1'
+var server_port = 8081; 
+var server_ip_address = '127.0.0.1';
 
 console.log("About to start app...");
 
 app.listen(server_port, server_ip_address, function () {
 	console.log("Listening on " + server_ip_address + ", port " + server_port);
 });
+
+reload();
